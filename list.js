@@ -165,40 +165,9 @@ function getS3Data(marker, prev) {
       });
 }
 
-// function buildNavigation(info) {
-//   var baseUrl = S3BL_IGNORE_PATH == false ? '/' : '?prefix=';
-//   var root = '<a href="' + baseUrl + '">' + BUCKET_WEBSITE_URL + '</a> / ';
-//   if (info.prefix) {
-//     var processedPathSegments = '';
-//     var content = $.map(info.prefix.split('/'), function(pathSegment) {
-//       processedPathSegments =
-//           processedPathSegments + encodeURIComponent(pathSegment) + '/';
-//       return '<a href="' + baseUrl + processedPathSegments.replace(/"/g, '&quot;') + '">' +
-//              pathSegment + '</a>';
-//     });
-//     $('#navigation').html(root + content.join(' / '));
-//   } else {
-//     $('#navigation').html(root);
-//   }
-// }
-
 function createS3QueryUrl(marker) {
   var s3_rest_url = BUCKET_URL;
   s3_rest_url += '?delimiter=/';
-
-  //
-  // Handling paths and prefixes:
-  //
-  // 1. S3BL_IGNORE_PATH = false
-  // Uses the pathname
-  // {bucket}/{path} => prefix = {path}
-  //
-  // 2. S3BL_IGNORE_PATH = true
-  // Uses ?prefix={prefix}
-  //
-  // Why both? Because we want classic directory style listing in normal
-  // buckets but also allow deploying to non-buckets
-  //
 
   var rx = '.*[?&]prefix=' + S3B_ROOT_DIR + '([^&]+)(&.*)?$';
   var prefix = '';
@@ -281,13 +250,7 @@ function getInfoFromS3Data(xml) {
 // }
 function prepareTable(info) {
   var files = info.directories.concat(info.files), prefix = info.prefix;
-  // var cols = [45, 30, 15];
-  // var content = [];
-  // content.push(padRight('Last Modified', cols[1]) + '  ' +
-  //              padRight('Size', cols[2]) + 'Key \n');
-  // content.push(new Array(cols[0] + cols[1] + cols[2] + 4).join('-') + '\n');
-
-
+  
   let htmlString = `<table>
                         <tr>
                           <th></th>
@@ -295,22 +258,6 @@ function prepareTable(info) {
                           <th>Last modified</th>
                           <th>Size</th>
                         </tr>`
-
-  // add ../ at the start of the dir listing, unless we are already at root dir
-  // if (prefix && prefix !== S3B_ROOT_DIR) {
-  //   var up = prefix.replace(/\/$/, '').replace(/"/g, '&quot;').split('/').slice(0, -1).concat('').join(
-  //           '/'),  // one directory up
-  //       item =
-  //           {
-  //             Key: up,
-  //             LastModified: '',
-  //             Size: '',
-  //             keyText: '../',
-  //             href: S3BL_IGNORE_PATH ? '?prefix=' + up : '../'
-  //           },
-  //       row = renderRow(item, cols);
-  //   content.push(row + '\n');
-  // }
 
   jQuery.each(files, function(idx, item) {
     // strip off the prefix
@@ -328,10 +275,8 @@ function prepareTable(info) {
     var row = prepareRow(item);
     if (!EXCLUDE_FILE.some(function(exclude){ return testExcludeFilter(exclude, item.Key); }))
       htmlString += row;
-      //content.push(row + '\n');
   });
 
-  //return content.join('');
   return htmlString
 }
 
@@ -354,14 +299,6 @@ function prepareRow(item) {
   row += '</tr>'
   return row;
 }
-
-// function renderRow(item, cols) {
-//   var row = '';
-//   row += padRight(item.LastModified, cols[1]) + '  ';
-//   row += padRight(item.Size, cols[2]);
-//   row += '<a href="' + item.href + '">' + item.keyText + '</a>';
-//   return row;
-// }
 
 function padRight(padString, length) {
   var str = padString.slice(0, length - 3);
